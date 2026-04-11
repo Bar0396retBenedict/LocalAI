@@ -1197,14 +1197,14 @@ func RegisterUIAPIRoutes(app *echo.Echo, cl *config.ModelConfigLoader, ml *model
 
 	// Backend upgrade APIs
 	app.GET("/api/backends/upgrades", func(c echo.Context) error {
-		if applicationInstance.UpgradeChecker() == nil {
+		if applicationInstance == nil || applicationInstance.UpgradeChecker() == nil {
 			return c.JSON(200, map[string]any{})
 		}
 		return c.JSON(200, applicationInstance.UpgradeChecker().GetAvailableUpgrades())
 	}, adminMiddleware)
 
 	app.POST("/api/backends/upgrades/check", func(c echo.Context) error {
-		if applicationInstance.UpgradeChecker() == nil {
+		if applicationInstance == nil || applicationInstance.UpgradeChecker() == nil {
 			return c.JSON(200, map[string]any{})
 		}
 		applicationInstance.UpgradeChecker().TriggerCheck()
