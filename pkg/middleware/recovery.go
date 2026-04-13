@@ -20,6 +20,8 @@ type RecoveryConfig struct {
 }
 
 // DefaultRecoveryConfig returns a RecoveryConfig with sensible defaults.
+// Note: EnableStackTrace is kept true so panics are always visible in logs,
+// which is useful for debugging even in production.
 var DefaultRecoveryConfig = RecoveryConfig{
 	EnableStackTrace:     true,
 	StackTraceInResponse: false,
@@ -59,6 +61,8 @@ func RecoveryMiddlewareWithConfig(cfg RecoveryConfig) fiber.Handler {
 				logEvent.Msg("recovered from panic")
 
 				// Build the response body.
+				// Always return a generic message to the client to avoid leaking
+				// internal details unless StackTraceInResponse is explicitly enabled.
 				responseBody := fiber.Map{
 					"error": fiber.Map{
 						"message": "internal server error",
