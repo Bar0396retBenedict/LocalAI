@@ -21,8 +21,10 @@ type TimeoutConfig struct {
 }
 
 // DefaultTimeoutConfig provides sensible defaults for the timeout middleware.
+// Increased default timeout to 60s since 30s was too aggressive for slower
+// local models (e.g. large GGUF files on CPU-only machines).
 var DefaultTimeoutConfig = TimeoutConfig{
-	Timeout:   30 * time.Second,
+	Timeout:   60 * time.Second,
 	SkipPaths: []string{"/readyz", "/healthz"},
 }
 
