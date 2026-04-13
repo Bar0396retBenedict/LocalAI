@@ -25,9 +25,10 @@ type TimeoutConfig struct {
 // local models (e.g. large GGUF files on CPU-only machines).
 // Personal note: bumped to 120s because my Raspberry Pi 5 needs extra headroom
 // when loading large quantized models for the first time.
+// Also skipping /metrics so Prometheus scrapes never get a 408 mid-collection.
 var DefaultTimeoutConfig = TimeoutConfig{
 	Timeout:   120 * time.Second,
-	SkipPaths: []string{"/readyz", "/healthz"},
+	SkipPaths: []string{"/readyz", "/healthz", "/metrics"},
 }
 
 // TimeoutMiddleware returns a Fiber middleware that enforces a maximum request duration.
