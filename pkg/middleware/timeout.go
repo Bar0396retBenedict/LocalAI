@@ -23,8 +23,10 @@ type TimeoutConfig struct {
 // DefaultTimeoutConfig provides sensible defaults for the timeout middleware.
 // Increased default timeout to 60s since 30s was too aggressive for slower
 // local models (e.g. large GGUF files on CPU-only machines).
+// Personal note: bumped to 120s because my Raspberry Pi 5 needs extra headroom
+// when loading large quantized models for the first time.
 var DefaultTimeoutConfig = TimeoutConfig{
-	Timeout:   60 * time.Second,
+	Timeout:   120 * time.Second,
 	SkipPaths: []string{"/readyz", "/healthz"},
 }
 
