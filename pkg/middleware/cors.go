@@ -35,9 +35,10 @@ type CORSConfig struct {
 // for development and open API deployments.
 func DefaultCORSConfig() CORSConfig {
 	return CORSConfig{
-		AllowOrigins:     "*",
-		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-Request-ID",
+		AllowOrigins: "*",
+		AllowMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+		// Added X-Api-Key to support clients that pass API keys via this header
+		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-Request-ID,X-Api-Key",
 		ExposeHeaders:    "Content-Length,Content-Type",
 		AllowCredentials: false,
 		MaxAge:           86400, // 24 hours
@@ -90,20 +91,16 @@ func CORSMiddleware(cfg CORSConfig) fiber.Handler {
 // the explicitly listed origins. Useful for production deployments where the
 // set of trusted front-ends is known in advance.
 func StrictCORSMiddleware(allowedOrigins []string) fiber.Handler {
-	originSet := make(map[string]struct{}, len(allowedOrigins))
+	originSet := make(map[string]struct{})
 	for _, o := range allowedOrigins {
-		originSet[strings.ToLower(strings.TrimSpace(o))] = struct{}{}
+		originSet[strings.TrimSpace(o)] = struct{}{}
 	}
 
-	return cors.New(cors.Config{
-		AllowOriginsFunc: func(origin string) bool {
-			_, ok := originSet[strings.ToLower(origin)]
-			return ok
-		},
-		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-Request-ID",
-		ExposeHeaders:    "Content-Length,Content-Type",
-		AllowCredentials: true,
-		MaxAge:           http.StatusOK, // reuse constant — actual value 200 used as cache seconds
-	})
+	return func(c *fiber.Ctx) error {
+		origin := c.Get("Origin")
+		if _, ok := originSet[origin]; !ok && origin != "" {
+			return c.SendStatus(http.StatusForbidden)
+		}
+		return c.Next()
+	}
 }
