@@ -22,11 +22,11 @@ type RecoveryConfig struct {
 // DefaultRecoveryConfig returns a RecoveryConfig with sensible defaults.
 // Note: EnableStackTrace is kept true so panics are always visible in logs,
 // which is useful for debugging even in production.
-// Note: StackTraceInResponse is also enabled here for my local dev setup
-// since I want full panic details in API responses during debugging.
+// Note: StackTraceInResponse is disabled by default - enable it locally by
+// passing a custom config to RecoveryMiddlewareWithConfig if needed.
 var DefaultRecoveryConfig = RecoveryConfig{
 	EnableStackTrace:     true,
-	StackTraceInResponse: true,
+	StackTraceInResponse: false,
 }
 
 // RecoveryMiddleware returns a Fiber middleware that recovers from panics,
