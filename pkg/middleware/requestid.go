@@ -21,6 +21,8 @@ const (
 type requestIDContextKey struct{}
 
 // generateRequestID creates a cryptographically random 16-byte hex string.
+// Using 16 bytes gives us 128 bits of entropy, which is sufficient for
+// uniqueness across distributed systems without being excessively long.
 func generateRequestID() (string, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
@@ -36,6 +38,8 @@ func generateRequestID() (string, error) {
 func RequestIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Prefer a client-supplied ID so distributed traces stay correlated.
+		// Note: we intentionally trust the client-supplied value here; if you
+		// need to prevent ID spoofing, validate or reject client-provided IDs.
 		requestID := c.GetHeader(RequestIDHeader)
 		if requestID == "" {
 			id, err := generateRequestID()
