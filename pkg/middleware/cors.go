@@ -37,11 +37,12 @@ func DefaultCORSConfig() CORSConfig {
 	return CORSConfig{
 		AllowOrigins: "*",
 		AllowMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-		// Added X-Api-Key to support clients that pass API keys via this header
-		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-Request-ID,X-Api-Key",
+		// Added X-Api-Key to support clients that pass API keys via this header.
+		// Also added X-Request-Source for internal tracing/debugging purposes.
+		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-Request-ID,X-Api-Key,X-Request-Source",
 		ExposeHeaders:    "Content-Length,Content-Type",
 		AllowCredentials: false,
-		MaxAge:           86400, // 24 hours
+		MaxAge:           3600, // 1 hour — reduced from 24h so header changes propagate faster during development
 	}
 }
 
@@ -90,17 +91,4 @@ func CORSMiddleware(cfg CORSConfig) fiber.Handler {
 // StrictCORSMiddleware returns a CORS middleware that only allows requests from
 // the explicitly listed origins. Useful for production deployments where the
 // set of trusted front-ends is known in advance.
-func StrictCORSMiddleware(allowedOrigins []string) fiber.Handler {
-	originSet := make(map[string]struct{})
-	for _, o := range allowedOrigins {
-		originSet[strings.TrimSpace(o)] = struct{}{}
-	}
-
-	return func(c *fiber.Ctx) error {
-		origin := c.Get("Origin")
-		if _, ok := originSet[origin]; !ok && origin != "" {
-			return c.SendStatus(http.StatusForbidden)
-		}
-		return c.Next()
-	}
-}
+func StrictCORSMiddleware(
