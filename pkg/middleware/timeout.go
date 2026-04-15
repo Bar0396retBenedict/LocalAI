@@ -26,9 +26,11 @@ type TimeoutConfig struct {
 // Personal note: bumped to 120s because my Raspberry Pi 5 needs extra headroom
 // when loading large quantized models for the first time.
 // Also skipping /metrics so Prometheus scrapes never get a 408 mid-collection.
+// Added /v1/models to skip list since model listing can be slow on first load
+// when the model directory contains many large files.
 var DefaultTimeoutConfig = TimeoutConfig{
 	Timeout:   120 * time.Second,
-	SkipPaths: []string{"/readyz", "/healthz", "/metrics"},
+	SkipPaths: []string{"/readyz", "/healthz", "/metrics", "/v1/models"},
 }
 
 // TimeoutMiddleware returns a Fiber middleware that enforces a maximum request duration.
@@ -88,8 +90,4 @@ func TimeoutMiddleware(cfg TimeoutConfig) fiber.Handler {
 // It applies a much longer deadline so that token-by-token responses are not
 // prematurely cut off while still guarding against completely hung connections.
 func StreamingTimeoutMiddleware(streamTimeout time.Duration) fiber.Handler {
-	return TimeoutMiddleware(TimeoutConfig{
-		Timeout:   streamTimeout,
-		SkipPaths: DefaultTimeoutConfig.SkipPaths,
-	})
-}
+	return TimeoutMid
