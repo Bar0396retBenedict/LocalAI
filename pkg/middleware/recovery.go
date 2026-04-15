@@ -69,6 +69,9 @@ func RecoveryMiddlewareWithConfig(cfg RecoveryConfig) fiber.Handler {
 					"error": fiber.Map{
 						"message": "internal server error",
 						"type":    "server_error",
+						// Including a code field makes it easier to programmatically
+						// identify this class of error on the client side.
+						"code": http.StatusInternalServerError,
 					},
 				}
 
@@ -76,6 +79,7 @@ func RecoveryMiddlewareWithConfig(cfg RecoveryConfig) fiber.Handler {
 					responseBody["error"] = fiber.Map{
 						"message": panicErr.Error(),
 						"type":    "server_error",
+						"code":    http.StatusInternalServerError,
 						"stack":   string(debug.Stack()),
 					}
 				}
