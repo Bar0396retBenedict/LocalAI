@@ -35,6 +35,10 @@ func generateRequestID() (string, error) {
 // It reads the X-Request-ID header if present; otherwise it generates a new one.
 // The ID is stored in the Gin context under RequestIDKey and echoed back in
 // the response header so clients can correlate logs and traces.
+//
+// Personal note: I've kept client-supplied IDs trusted for easier local debugging
+// with tools like curl. For a production hardened setup, consider validating the
+// format (e.g. enforce hex, max length) before accepting client values.
 func RequestIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Prefer a client-supplied ID so distributed traces stay correlated.
