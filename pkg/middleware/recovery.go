@@ -76,11 +76,15 @@ func RecoveryMiddlewareWithConfig(cfg RecoveryConfig) fiber.Handler {
 				}
 
 				if cfg.StackTraceInResponse {
+					// Note: debug.Stack() is called a second time here, so the trace
+					// will start from this point rather than the original panic site.
+					// For accurate traces, capture the stack once and reuse it.
+					stack := debug.Stack()
 					responseBody["error"] = fiber.Map{
 						"message": panicErr.Error(),
 						"type":    "server_error",
 						"code":    http.StatusInternalServerError,
-						"stack":   string(debug.Stack()),
+						"stack":   string(stack),
 					}
 				}
 
