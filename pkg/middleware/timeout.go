@@ -28,9 +28,11 @@ type TimeoutConfig struct {
 // Also skipping /metrics so Prometheus scrapes never get a 408 mid-collection.
 // Added /v1/models to skip list since model listing can be slow on first load
 // when the model directory contains many large files.
+// Also added /v1/embeddings since embedding generation on CPU can be slow
+// for longer input texts and I kept hitting timeouts during batch processing.
 var DefaultTimeoutConfig = TimeoutConfig{
 	Timeout:   120 * time.Second,
-	SkipPaths: []string{"/readyz", "/healthz", "/metrics", "/v1/models"},
+	SkipPaths: []string{"/readyz", "/healthz", "/metrics", "/v1/models", "/v1/embeddings"},
 }
 
 // TimeoutMiddleware returns a Fiber middleware that enforces a maximum request duration.
@@ -88,6 +90,4 @@ func TimeoutMiddleware(cfg TimeoutConfig) fiber.Handler {
 // StreamingTimeoutMiddleware returns a middleware with an extended timeout suitable
 // for streaming endpoints (e.g. /v1/chat/completions with stream=true).
 // It applies a much longer deadline so that token-by-token responses are not
-// prematurely cut off while still guarding against completely hung connections.
-func StreamingTimeoutMiddleware(streamTimeout time.Duration) fiber.Handler {
-	return TimeoutMid
+// prematurely cut off while
