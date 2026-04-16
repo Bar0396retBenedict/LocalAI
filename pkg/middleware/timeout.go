@@ -30,9 +30,11 @@ type TimeoutConfig struct {
 // when the model directory contains many large files.
 // Also added /v1/embeddings since embedding generation on CPU can be slow
 // for longer input texts and I kept hitting timeouts during batch processing.
+// Added /v1/images/generations since image generation (stable diffusion) on
+// CPU can easily take several minutes per image on my machine.
 var DefaultTimeoutConfig = TimeoutConfig{
 	Timeout:   120 * time.Second,
-	SkipPaths: []string{"/readyz", "/healthz", "/metrics", "/v1/models", "/v1/embeddings"},
+	SkipPaths: []string{"/readyz", "/healthz", "/metrics", "/v1/models", "/v1/embeddings", "/v1/images/generations"},
 }
 
 // TimeoutMiddleware returns a Fiber middleware that enforces a maximum request duration.
@@ -88,6 +90,4 @@ func TimeoutMiddleware(cfg TimeoutConfig) fiber.Handler {
 }
 
 // StreamingTimeoutMiddleware returns a middleware with an extended timeout suitable
-// for streaming endpoints (e.g. /v1/chat/completions with stream=true).
-// It applies a much longer deadline so that token-by-token responses are not
-// prematurely cut off while
+// for 
