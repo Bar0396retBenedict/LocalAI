@@ -49,6 +49,12 @@ func RecoveryMiddlewareWithConfig(cfg RecoveryConfig) fiber.Handler {
 					panicErr = fmt.Errorf("%v", v)
 				}
 
+				// Capture stack once so we can reuse it in both the log and response.
+				var stack []byte
+				if cfg.EnableStackTrace {
+					stack = debug.Stack()
+				}
+
 				logEvent := log.Error().
 					Err(panicErr).
 					Str("method", c.Method()).
@@ -56,7 +62,6 @@ func RecoveryMiddlewareWithConfig(cfg RecoveryConfig) fiber.Handler {
 					Str("ip", c.IP())
 
 				if cfg.EnableStackTrace {
-					stack := debug.Stack()
 					logEvent = logEvent.Bytes("stack", stack)
 				}
 
@@ -76,10 +81,7 @@ func RecoveryMiddlewareWithConfig(cfg RecoveryConfig) fiber.Handler {
 				}
 
 				if cfg.StackTraceInResponse {
-					// Note: debug.Stack() is called a second time here, so the trace
-					// will start from this point rather than the original panic site.
-					// For accurate traces, capture the stack once and reuse it.
-					stack := debug.Stack()
+					// Reuse the stack captured above for an accurate trace from the panic site.
 					responseBody["error"] = fiber.Map{
 						"message": panicErr.Error(),
 						"type":    "server_error",
@@ -92,7 +94,6 @@ func RecoveryMiddlewareWithConfig(cfg RecoveryConfig) fiber.Handler {
 				_ = c.Status(http.StatusInternalServerError).JSON(responseBody)
 			}
 		}()
-
 		return c.Next()
 	}
 }
