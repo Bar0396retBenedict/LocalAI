@@ -24,6 +24,8 @@ type RecoveryConfig struct {
 // which is useful for debugging even in production.
 // Note: StackTraceInResponse is disabled by default - enable it locally by
 // passing a custom config to RecoveryMiddlewareWithConfig if needed.
+// Personal note: I keep StackTraceInResponse false even locally and just
+// tail the logs instead - less risk of accidentally exposing traces.
 var DefaultRecoveryConfig = RecoveryConfig{
 	EnableStackTrace:     true,
 	StackTraceInResponse: false,
